@@ -3,6 +3,7 @@ from psycopg2 import sql
 import os
 from dotenv import load_dotenv
 import sys
+import tabulate
 
 # Load environment variables from .env file
 load_dotenv()
@@ -254,6 +255,51 @@ def insert_sample_data(conn):
     conn.commit()
     cursor.close()
     print("Sample data inserted successfully")
+
+def execute_query(conn, query, params=None):
+    """Ejecuta una consulta SQL y devuelve los resultados"""
+    cursor = conn.cursor()
+    try:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        # Verificar si la consulta devuelve resultados
+        if cursor.description:
+            # Obtener los nombres de las columnas
+            columns = [desc[0] for desc in cursor.description]
+            # Obtener los resultados
+            results = cursor.fetchall()
+            return columns, results
+        else:
+            # Para consultas que no devuelven resultados (INSERT, UPDATE, DELETE)
+            rows_affected = cursor.rowcount
+            return None, f"{rows_affected} filas afectadas"
+    except Exception as e:
+        return None, f"Error en la consulta: {str(e)}"
+    finally:
+        cursor.close()
+
+def display_results(columns, results):
+    """Muestra los resultados en un formato de tabla"""
+    if columns:
+        print(tabulate(results, headers=columns, tablefmt="psql"))
+    else:
+        print(results)
+
+def show_query(query):   
+    # Conectar a la base de datos
+    try:
+        conn = create_connection()
+        columns, results = execute_query(conn, query)
+        display_results(columns, results)
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 def main():
     import argparse
