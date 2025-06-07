@@ -3,7 +3,7 @@ from psycopg2 import sql
 import os
 from dotenv import load_dotenv
 import sys
-import tabulate
+from tabulate import tabulate
 
 # Load environment variables from .env file
 load_dotenv()
